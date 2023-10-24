@@ -153,14 +153,14 @@ metro_file = "metro.txt"
 graphe = get_graphe(metro_file, positions)
 dict_ppc, lignes = get_all_ppc(graphe)
 
-depart = 0
-arrive = 1
-print(plus_court_chemin(depart,arrive, dict_ppc, graphe))
+# depart = 0
+# arrive = 1
+# print(plus_court_chemin(depart,arrive, dict_ppc, graphe))
 
-print("Direction :",get_direction(depart,arrive, lignes, graphe))
+# print("Direction :",get_direction(depart,arrive, lignes, graphe))
 
-for l in lignes:
-    print(l,':',lignes[l])
-print(len(lignes))
+# for l in lignes:
+#     print(l,':',lignes[l])
+# print(len(lignes))
 temps_fin = time.time()
 print(f"Temps d'exécution : {temps_fin - temps_debut} secondes")
