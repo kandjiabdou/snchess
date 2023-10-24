@@ -1,6 +1,33 @@
 import os, json, time, random
 from unidecode import unidecode
 
+
+# def prim(graph, sommetDepart):
+#     ACPM = []
+#     visited = set()
+#     G = nx.Graph()
+
+#     visited.add(sommetDepart)
+#     poids_total = 0
+
+#     while len(visited) < len(graph):
+#         poids_minimum = float('inf')
+#         min_E = None
+
+#         for sommet in visited:
+#             for voisin, poids in graph[sommet]:
+#                 if voisin not in visited and poids < poids_minimum:
+#                     poids_minimum = poids
+#                     min_E = (sommet, voisin) 
+#         if min_E:
+#             u, v = min_E
+#             ACPM.append((u, v, poids_minimum))
+#             G.add_edge(u, v, poids=poids_minimum)
+#             visited.add(v)
+#             poids_total += poids_minimum
+
+#     return ACPM, G, poids_total
+
 def get_sommet_position(file_name):
     positions = {}
     with open(file_name, "r", encoding = "utf8") as file:
