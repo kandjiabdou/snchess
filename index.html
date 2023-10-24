@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+  <link href="./utils/css/index.css" rel="stylesheet">
+  <script type="text/javascript" src="./utils/js/paper-full.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <!-- App.vue -->
+
+    <v-app>
+      <v-app-bar app>
+        <!-- -->
+        SNCHess - EFREI
+      </v-app-bar>
+      <v-navigation-drawer width="600" app>
+        Itinéraire SNCHess
+
+        <v-container fluid class="mt-5 pa-5">
+          <v-autocomplete v-model="id_depart" :items="sommets" item-text="nom" item-value="id" dense filled
+            label="Départ" append-outer-icon="mdi-map" v-on:change="onClickStation(id_depart)">
+            <template v-slot:item="{ item }">
+              <div>{{ item.nom }} - {{ item.num_ligne }}</div>
+            </template>
+          </v-autocomplete>
+          <v-autocomplete v-model="id_arrive" :items="sommets" item-text="nom" item-value="id" dense filled
+            label="Arrivé" append-outer-icon="mdi-map" v-on:change="onClickStation(id_arrive, false)">
+            <template v-slot:item="{ item }">
+              <div>{{ item.nom }} - {{ item.num_ligne }}</div>
+            </template>
+          </v-autocomplete>
+        </v-container>
+
+        <v-divider class="mx-4"></v-divider>
+
+        <v-container>
+
+          <v-container v-if="itineraire" class="pl-0 pr-5">
+            <p>De
+              <strong>{{ itineraire.depart }}</strong> à
+              <strong> {{ itineraire.arrive }}</strong>
+            </p>
+            <v-row>
+              <v-col>
+                <p>Durée du trajet : <strong>{{ itineraire.temps_trajet }} min</strong></p>
+              </v-col>
+              <v-col>
+                <p><v-icon>mdi-walk</v-icon> <strong>{{ itineraire.temps_marche }} min</strong></p>
+              </v-col>
+            </v-row>
+
+            <v-timeline dense class="custom-timeline-bar pt-0">
+              <v-timeline-item color="white" class="pb-0">
+                <template v-slot:icon>
+                  <v-icon large> mdi-map-marker</v-icon>
+                </template>
+                <div class="pt-2">Départ</div>
+              </v-timeline-item>
+            </v-timeline>
+
+            <div v-for="portion in itineraire.portions" :key="portion.id">
+
+              <v-timeline v-if="!portion.marche" :id="'timeline_' + portion.ligne" align-top dense
+                class="custom-timeline-bar pt-4">
+
+                <v-timeline-item class="pb-4">
+                  <template v-slot:icon>
+                    <v-avatar>
+                      <img :src="portion.img_ligne">
+                    </v-avatar>
+                  </template>
+                  <div>
+                    <div class="font-weight-normal mb-3">15h43 - <strong> {{portion.depart}}</strong></div>
+                    <v-card class="pa-2">
+                      <div><strong>Metro {{portion.ligne}}</strong></div>
+                      <div class="font-weight-normal mb-4">Direction : <strong>{{portion.direction}}</strong></div>
+                      <v-expansion-panels>
+                        <v-expansion-panel>
+                          <v-expansion-panel-header class="pa-0">
+                            <p class="ma-2"><strong v-if="portion.nb_arret === 1"> Descendre à l'arrêt suivant
+                              </strong><strong v-else> {{portion.nb_arret}} arrêts </strong> | {{portion.temps}} min</p>
+                          </v-expansion-panel-header>
+                          <v-expansion-panel-content class="pb-0">
+                            <p v-for="sommet in portion.arrtets_intermediaires" :key="sommet">{{sommet}}</p>
+                          </v-expansion-panel-content>
+                        </v-expansion-panel>
+                      </v-expansion-panels>
+                    </v-card>
+                  </div>
+                </v-timeline-item>
+
+                <v-timeline-item v-if="portion.is_arrive" class="pb-2" :color="portion.couleur" align-end>
+                  <div>
+                    Arrivé
+                  </div>
+                  <template v-slot:icon>
+                    <v-icon x-large> mdi-source-commit-end-local</v-icon>
+                  </template>
+                  <div class="font-weight-normal">16h06 <strong>- {{portion.arrive}}</strong></div>
+                </v-timeline-item>
+                
+                <v-timeline-item v-else class="pb-2" :color="portion.couleur" align-end small>
+                  <div class="font-weight-normal">16h06 <strong>- {{portion.arrive}}</strong></div>
+                </v-timeline-item>
+
+              </v-timeline>
+
+              <v-timeline v-else dense class="pt-3">
+                <v-timeline-item color="white" class="pb-3">
+                  <template v-slot:icon>
+                    <v-icon large> mdi-walk</v-icon>
+                  </template>
+                  <div class="pt-2"><strong>{{portion.temps}} min</strong> de marche</div>
+                </v-timeline-item>
+                <v-timeline-item v-if="portion.is_arrive" class="pb-2" :color="portion.couleur" align-end>
+                  <div>
+                    Arrivé
+                  </div>
+                  <template v-slot:icon>
+                    <v-icon x-large> mdi-source-commit-end-local</v-icon>
+                  </template>
+                  <div class="font-weight-normal">16h06 <strong>- {{portion.arrive}}</strong></div>
+                </v-timeline-item>
+
+              </v-timeline>
+
+            </div>
+
+          </v-container>
+        </v-container>
+
+      </v-navigation-drawer>
+
+      <!-- Sizes your content based upon application components -->
+      <v-main id="main_map">
+        <!-- If using vue-router -->
+        <canvas id="myCanvas" resize></canvas>
+      </v-main>
+
+      <v-footer app>
+
+        SNCHess @ 2023
+
+      </v-footer>
+    </v-app>
+
+  </div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+  <script src="./utils/js/app.js"></script>
+  <script type="text/javascript" src="./utils/js/paper.js"></script>
+</body>
+
+</html>
