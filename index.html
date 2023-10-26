@@ -13,16 +13,15 @@
 <body>
   <div id="app">
     <!-- App.vue -->
-
     <v-app>
       <v-app-bar app>
         <!-- -->
         SNCHess - EFREI
       </v-app-bar>
-      <v-navigation-drawer width="600" app>
+      <v-navigation-drawer width="600" class="pa-10" app>
         Itinéraire SNCHess
 
-        <v-container fluid class="mt-5 pa-5">
+        <v-container fluid class="mt-5 pa-5"  >
           <v-autocomplete v-model="id_depart" :items="sommets" item-text="nom" item-value="id" dense filled
             label="Départ" append-outer-icon="mdi-map" v-on:change="onClickStation(id_depart)">
             <template v-slot:item="{ item }">
@@ -35,6 +34,7 @@
               <div>{{ item.nom }} - {{ item.num_ligne }}</div>
             </template>
           </v-autocomplete>
+          <v-btn v-if="isDepArr" v-on:click="swapItineraire" color="primary" elevation="10" ><v-icon large> mdi-swap-vertical</v-icon></v-btn>
         </v-container>
 
         <v-divider class="mx-4"></v-divider>
@@ -104,7 +104,7 @@
                   </template>
                   <div class="font-weight-normal">16h06 <strong>- {{portion.arrive}}</strong></div>
                 </v-timeline-item>
-                
+
                 <v-timeline-item v-else class="pb-2" :color="portion.couleur" align-end small>
                   <div class="font-weight-normal">16h06 <strong>- {{portion.arrive}}</strong></div>
                 </v-timeline-item>
@@ -140,7 +140,7 @@
       <!-- Sizes your content based upon application components -->
       <v-main id="main_map">
         <!-- If using vue-router -->
-        <canvas id="myCanvas" resize></canvas>
+        <canvas id="myCanvas"></canvas>
       </v-main>
 
       <v-footer app>

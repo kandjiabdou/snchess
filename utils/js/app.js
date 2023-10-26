@@ -31,7 +31,9 @@ new Vue({
       "12": "https://www.ratp.fr/sites/default/files/lines-assets/picto/metro/picto_metro_ligne-12.1686818036.svg",
       "13": "https://www.ratp.fr/sites/default/files/lines-assets/picto/metro/picto_metro_ligne-13.1686818036.svg",
       "14": "https://www.ratp.fr/sites/default/files/lines-assets/picto/metro/picto_metro_ligne-14.1686818036.svg"
-    }
+    },
+    circles: [],
+    paths: [],
   }),
   created() {
     this.readDataGraphe();
@@ -47,6 +49,7 @@ new Vue({
         .then(response => response.json())
         .then(data => { this.sommets = data; })
         .catch(error => { console.error("Error:", error); });
+
       await fetch('./model/ppc_graphe.json', { mode: 'no-cors' })
         .then(response => response.json())
         .then(pcc_data => {
@@ -54,17 +57,30 @@ new Vue({
           this.lignesMetros = pcc_data["lignes"];
           this.drawAllSommets();
         }).catch(error => { console.error("Error :", error); });
-      
+
       return true;
     },
     onClickStation(id_sommet, depart = true) {
       if (depart) this.id_depart = id_sommet;
       else this.id_arrive = id_sommet;
-      if (this.id_depart != null && this.id_arrive != null && this.id_depart != this.id_arrive) {
+      if (this.isDepArr) {
         console.log("________________________________________");
         this.itineraire = this.getItineraireInfo(this.id_depart, this.id_arrive);
         this.drawPath();
-        // console.log(this.itineraire);
+      }
+    },
+    swapItineraire() {
+      console.log(this.id_depart, this.id_arrive);
+      let sommet = this.id_depart
+      this.id_depart = this.id_arrive;
+      this.id_arrive = sommet;
+      console.log(this.id_depart, this.id_arrive);
+      this.itineraire = [];
+      if (this.isDepArr) {
+        console.log("________________________________________");
+        this.itineraire = this.getItineraireInfo(this.id_depart, this.id_arrive);
+        console.log(this.itineraire);
+        this.drawPath();
       }
     },
     getItineraireInfo(depart, arrive) {
@@ -100,7 +116,8 @@ new Vue({
           tempsMarcheTotal += this.getTemps(chemin[i - 1], chemin[i]);
           marche = {
             "marche": true, "dep": chemin[i - 1],
-            "arr": chemin[i], "temps": temps_marche
+            "arr": chemin[i], "temps": temps_marche,
+            "couleur": "black"
           };
           result.push(marche);
           portion = { "ligne": this.getLigne(chemin[i]), "dep": chemin[i], "arr": null };
@@ -112,7 +129,7 @@ new Vue({
       }
       result.forEach(portion_ => {
         pcc = this.getPlusCourtChemin(portion_["dep"], portion_["arr"]);
-        if (pcc) {
+        if (!portion_.marche) {
           portion_['temps'] = this.getHeureMinutes(pcc['distance']);
           portion_['direction'] = this.getDirection(portion_["dep"], portion_["arr"]);
           portion_['couleur'] = this.couleurLinges[portion_["ligne"]];
@@ -122,15 +139,16 @@ new Vue({
           for (let i = 1; i < pcc['chemin'].length - 1; i++) {
             portion_['arrtets_intermediaires'].push(this.getNomSommet(pcc['chemin'][i]));
           }
-          portion_['points'] = [];
-          var point;
-          for (let i = 0; i < pcc['chemin'].length; i++) {
-            point = {
-              "nom": this.getNomSommet(pcc['chemin'][i]),
-              "position": this.getPosition(pcc['chemin'][i])
-            };
-            portion_['points'].push(point);
-          }
+
+        }
+        portion_['points'] = [];
+        var point;
+        for (let i = 0; i < pcc['chemin'].length; i++) {
+          point = {
+            "nom": this.getNomSommet(pcc['chemin'][i]),
+            "position": this.getPosition(pcc['chemin'][i])
+          };
+          portion_['points'].push(point);
         }
         portion_['id'] = "portion" + portion_["dep"] + portion_["arr"]
         portion_['depart'] = this.getNomSommet(portion_["dep"]);
@@ -185,10 +203,9 @@ new Vue({
       return false;
     },
     drawAllSommets() {
-      console.log(this.sommets);
       for (var i = 0; i < this.sommets.length; i++) {
         const pt = this.sommets[i]['position'];
-        var point = new paper.Point( pt[0], pt[1]);
+        var point = new paper.Point(pt[0], pt[1]);
         var circle = new paper.Path.Circle({
           center: point,
           radius: 5,
@@ -196,11 +213,59 @@ new Vue({
         });
       }
     },
-    drawPath() {
-      console.log(this.itineraire);
+    async drawPath() {
+      for (const p in this.paths) {
+        await this.paths[p].remove();
+      }
+      for (const c in this.circles) {
+        await this.circles[c].remove();
+      }
+      this.circles = [];
+      this.paths = [];
+      for (p in this.itineraire.portions) {
+        const portion = this.itineraire.portions[p];
+        this.drawPortion(portion.points, portion.couleur);
+      }
+    },
+    drawPortion(points, couleur) {
+
+      const path = new paper.Path();
+      path.strokeColor = couleur;
+      path.strokeWidth = 5;
+
+      for (let p in points) {
+        const point = new paper.Point(points[p]['position'][0], points[p]['position'][1]);
+        path.add(point);
+        const circle = new paper.Path.Circle(point, 10);
+        circle.fillColor = couleur;
+        this.circles.push(circle);
+      }
+
+      this.paths.push(path);
+
+
     }
   },
-  computed:{
+  drawPathPointByPoint(path, points, currentIndex) {
+    if (currentIndex < points.length) {
+      const point = new paper.Point(points[currentIndex]['position'][0], points[currentIndex]['position'][1]);
+      path.add(point);
+      const circle = new paper.Path.Circle(point, 10);
+      circle.fillColor = couleur;
+      this.circles.push(circle);
+
+      setTimeout(() => {
+        drawPathPointByPoint(points, currentIndex + 1);
+      }, 100);
+
+    } else {
+      // Animation terminée, vous pouvez ajouter du code ici pour gérer la fin de l'animation
+    }
+  },
+  computed: {
+    isDepArr() {
+      return this.id_depart != null && this.id_arrive != null && this.id_depart != this.id_arrive;
+    }
   },
   vuetify: new Vuetify(),
 });

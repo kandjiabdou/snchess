@@ -1,32 +1,46 @@
 import os, json, time, random
 from unidecode import unidecode
 
+def prim(graph, sommetDepart):
+    ACPM = []
+    visited = set()
+    visited.add(sommetDepart)
+    poids_total = 0
 
-# def prim(graph, sommetDepart):
-#     ACPM = []
-#     visited = set()
-#     G = nx.Graph()
+    while len(visited) < len(graph):
+        poids_minimum = float('inf')
+        min_E = None
+        for sommet in visited:
+            list_voisins = graph[int(sommet)]['voisins']
+            for voisin in list_voisins:
+                if int(voisin) not in visited and int(list_voisins[voisin]) < poids_minimum:
+                    poids_minimum = int(list_voisins[voisin])
+                    min_E = [int(sommet), int(voisin)]
+        if min_E:
+            u, v = min_E
+            ACPM.append((u, v, poids_minimum))
+            visited.add(v)
+            poids_total += poids_minimum
 
-#     visited.add(sommetDepart)
-#     poids_total = 0
+    return ACPM, poids_total
 
-#     while len(visited) < len(graph):
-#         poids_minimum = float('inf')
-#         min_E = None
 
-#         for sommet in visited:
-#             for voisin, poids in graph[sommet]:
-#                 if voisin not in visited and poids < poids_minimum:
-#                     poids_minimum = poids
-#                     min_E = (sommet, voisin) 
-#         if min_E:
-#             u, v = min_E
-#             ACPM.append((u, v, poids_minimum))
-#             G.add_edge(u, v, poids=poids_minimum)
-#             visited.add(v)
-#             poids_total += poids_minimum
+def prim_all_sommet(graphe):
+    file_acpms = "acpm.json"
+    if os.path.exists(file_acpms):
+        with open(file_acpms, 'r', encoding = "utf8") as data_acpm_file:
+            return json.load(data_acpm_file)
+    data_all_acpm = {}
 
-#     return ACPM, G, poids_total
+    for v in range(len(graphe)):
+        acpm, poids_total = prim(graphe, v)
+        data_all_acpm[v] = {"poids_total": poids_total, "arbre": acpm}
+
+    with open(file_acpms, 'w', encoding="utf8") as file_save_acpms:
+        json.dump(data_all_acpm, file_save_acpms)
+    return data_all_acpm
+
+
 
 def get_sommet_position(file_name):
     positions = {}
@@ -41,12 +55,13 @@ def get_sommet_position(file_name):
     return positions
 
 def get_graphe(file_name, pospoints):
-    file_sommets = "sommets.json"
-    if os.path.exists(file_sommets):
-        with open(file_sommets, 'r', encoding = "utf8") as data_sommet_file:
-            graphe = json.load(data_sommet_file)
-            return graphe
+    # file_sommets = "sommets.json"
+    # if os.path.exists(file_sommets):
+    #     with open(file_sommets, 'r', encoding = "utf8") as data_sommet_file:
+    #         graphe = json.load(data_sommet_file)
+    #         return graphe
     graphe = []
+    arretes = []
     with open(file_name, "r", encoding = "utf8") as file:
         for ligne in file:
             if ligne.startswith("V"):
@@ -61,12 +76,13 @@ def get_graphe(file_name, pospoints):
 
             elif ligne.startswith("E"):
                 s1, s2, p = ligne.split()[1:]
+                arretes.append(ligne.split()[1:])
                 graphe[int(s1)]["voisins"][int(s2)] = int(p)
                 graphe[int(s2)]["voisins"][int(s1)] = int(p)
                 
-    with open(file_sommets, 'w', encoding="utf8") as file_save_sommets:
-        json.dump(graphe, file_save_sommets)
-    return graphe
+    # with open(file_sommets, 'w', encoding="utf8") as file_save_sommets:
+    #     json.dump(graphe, file_save_sommets)
+    return graphe, arretes
 
 def bellmanFord(graphe, s):
     d_ = {v: float('inf') for v in range(len(graphe))}
@@ -150,8 +166,26 @@ temps_debut = time.time()
 
 positions = get_sommet_position("pospoints.txt")
 metro_file = "metro.txt"
-graphe = get_graphe(metro_file, positions)
-dict_ppc, lignes = get_all_ppc(graphe)
+graphe, list_arretes = get_graphe(metro_file, positions)
+
+
+# list_arretes = quadruplet_valeur("metro.txt")
+# print(list_arretes)
+# print(len(list_arretes))
+# graphe = create_graph(list_arretes)
+
+# print(graphe)
+
+acpm, p = prim2(graphe, 10)
+
+print(acpm)
+print(len(acpm))
+print(p)
+
+# prim_all_sommet(graphe)
+
+
+# dict_ppc, lignes = get_all_ppc(graphe)
 
 # depart = 0
 # arrive = 1
@@ -164,3 +198,5 @@ dict_ppc, lignes = get_all_ppc(graphe)
 # print(len(lignes))
 temps_fin = time.time()
 print(f"Temps d'exécution : {temps_fin - temps_debut} secondes")
+
+
