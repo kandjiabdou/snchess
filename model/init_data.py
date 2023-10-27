@@ -21,7 +21,6 @@ def prim(graph, sommetDepart):
             ACPM.append((u, v, poids_minimum))
             visited.add(v)
             poids_total += poids_minimum
-
     return ACPM, poids_total
 
 
@@ -55,13 +54,12 @@ def get_sommet_position(file_name):
     return positions
 
 def get_graphe(file_name, pospoints):
-    # file_sommets = "sommets.json"
-    # if os.path.exists(file_sommets):
-    #     with open(file_sommets, 'r', encoding = "utf8") as data_sommet_file:
-    #         graphe = json.load(data_sommet_file)
-    #         return graphe
+    file_sommets = "sommets.json"
+    if os.path.exists(file_sommets):
+        with open(file_sommets, 'r', encoding = "utf8") as data_sommet_file:
+            graphe = json.load(data_sommet_file)
+            return graphe
     graphe = []
-    arretes = []
     with open(file_name, "r", encoding = "utf8") as file:
         for ligne in file:
             if ligne.startswith("V"):
@@ -76,13 +74,12 @@ def get_graphe(file_name, pospoints):
 
             elif ligne.startswith("E"):
                 s1, s2, p = ligne.split()[1:]
-                arretes.append(ligne.split()[1:])
                 graphe[int(s1)]["voisins"][int(s2)] = int(p)
                 graphe[int(s2)]["voisins"][int(s1)] = int(p)
                 
-    # with open(file_sommets, 'w', encoding="utf8") as file_save_sommets:
-    #     json.dump(graphe, file_save_sommets)
-    return graphe, arretes
+    with open(file_sommets, 'w', encoding="utf8") as file_save_sommets:
+        json.dump(graphe, file_save_sommets)
+    return graphe
 
 def bellmanFord(graphe, s):
     d_ = {v: float('inf') for v in range(len(graphe))}
@@ -108,7 +105,7 @@ def get_all_ppc(graphe):
             return data["dict_pcc"], data["lignes"]
     liste_lignes_metros = {}
     dict_ppc = {str(i): {} for i in range(len(graphe))}
-    for i in range(len(graphe)): 
+    for i in range(len(graphe)):
         distances, chemins = bellmanFord(graphe, i)
         for j in range(i):
             dict_ppc[str(i)][str(j)] = {"distance":distances[j], "chemin":chemins[j]}
@@ -123,7 +120,7 @@ def get_all_ppc(graphe):
                 elif brchmt_i == 1 or brchmt_j == 1:
                     if not numl_i in liste_lignes_metros: liste_lignes_metros[numl_i] = {}
                     if not "1" in liste_lignes_metros[numl_i]:
-                        liste_lignes_metros[numl_i]["1"] = chemins[j]       
+                        liste_lignes_metros[numl_i]["1"] = chemins[j]
                 else: liste_lignes_metros[graphe[i]['num_ligne']] = chemins[j]
     
     data = {"dict_pcc": dict_ppc, "lignes":liste_lignes_metros}
@@ -166,23 +163,17 @@ temps_debut = time.time()
 
 positions = get_sommet_position("pospoints.txt")
 metro_file = "metro.txt"
-graphe, list_arretes = get_graphe(metro_file, positions)
-
-
-# list_arretes = quadruplet_valeur("metro.txt")
-# print(list_arretes)
-# print(len(list_arretes))
-# graphe = create_graph(list_arretes)
+graphe = get_graphe(metro_file, positions)
 
 # print(graphe)
 
-acpm, p = prim2(graphe, 10)
+# acpm, p = prim(graphe, 10)
 
-print(acpm)
-print(len(acpm))
-print(p)
+# print(acpm)
+# print(len(acpm))
+# print(p)
 
-# prim_all_sommet(graphe)
+prim_all_sommet(graphe)
 
 
 # dict_ppc, lignes = get_all_ppc(graphe)

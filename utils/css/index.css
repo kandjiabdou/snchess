@@ -1,15 +1,16 @@
-canvas {
+.canvas-container {
+    position: relative;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    padding-bottom: 100%;
 }
 
-/* #main_map {
-    width: 987px;
-    height: 952px;
-    object-fit: cover;
-    background-image: url("");
-} */
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
 
 .custom-timeline-bar::before {
     width: 5px;
@@ -18,57 +19,86 @@ canvas {
     margin-bottom: 20px;
 }
 
-#timeline_1.v-timeline--dense:not(.v-timeline--reverse):before, .v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before{
+#timeline_1.v-timeline--dense:not(.v-timeline--reverse):before,
+.v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before {
     background-color: #FFCE00;
 }
 
-#timeline_2.v-timeline--dense:not(.v-timeline--reverse):before, .v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before{
+#timeline_2.v-timeline--dense:not(.v-timeline--reverse):before,
+.v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before {
     background-color: #0064B0;
 }
 
-#timeline_3.v-timeline--dense:not(.v-timeline--reverse):before, .v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before{
+#timeline_3.v-timeline--dense:not(.v-timeline--reverse):before,
+.v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before {
     background-color: #9F9825;
 }
-#timeline_3bis.v-timeline--dense:not(.v-timeline--reverse):before, .v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before{
+
+#timeline_3bis.v-timeline--dense:not(.v-timeline--reverse):before,
+.v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before {
     background-color: #98D4E2;
 }
-#timeline_4.v-timeline--dense:not(.v-timeline--reverse):before, .v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before{
+
+#timeline_4.v-timeline--dense:not(.v-timeline--reverse):before,
+.v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before {
     background-color: #C04191;
 }
-#timeline_5.v-timeline--dense:not(.v-timeline--reverse):before, .v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before{
+
+#timeline_5.v-timeline--dense:not(.v-timeline--reverse):before,
+.v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before {
     background-color: #F28E42;
 }
-#timeline_6.v-timeline--dense:not(.v-timeline--reverse):before, .v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before{
+
+#timeline_6.v-timeline--dense:not(.v-timeline--reverse):before,
+.v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before {
     background-color: #83C491;
 }
-#timeline_7.v-timeline--dense:not(.v-timeline--reverse):before, .v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before{
+
+#timeline_7.v-timeline--dense:not(.v-timeline--reverse):before,
+.v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before {
     background-color: #F3A4BA;
 }
-#timeline_7bis.v-timeline--dense:not(.v-timeline--reverse):before, .v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before{
+
+#timeline_7bis.v-timeline--dense:not(.v-timeline--reverse):before,
+.v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before {
     background-color: #83C491;
 }
-#timeline_8.v-timeline--dense:not(.v-timeline--reverse):before, .v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before{
+
+#timeline_8.v-timeline--dense:not(.v-timeline--reverse):before,
+.v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before {
     background-color: #CEADD2;
 }
-#timeline_9.v-timeline--dense:not(.v-timeline--reverse):before, .v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before{
+
+#timeline_9.v-timeline--dense:not(.v-timeline--reverse):before,
+.v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before {
     background-color: #D5C900;
 }
-#timeline_10.v-timeline--dense:not(.v-timeline--reverse):before, .v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before{
+
+#timeline_10.v-timeline--dense:not(.v-timeline--reverse):before,
+.v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before {
     background-color: #E3B32A;
 }
-#timeline_11.v-timeline--dense:not(.v-timeline--reverse):before, .v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before{
+
+#timeline_11.v-timeline--dense:not(.v-timeline--reverse):before,
+.v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before {
     background-color: #8D5E2A;
 }
-#timeline_12.v-timeline--dense:not(.v-timeline--reverse):before, .v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before{
+
+#timeline_12.v-timeline--dense:not(.v-timeline--reverse):before,
+.v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before {
     background-color: #00814F;
 }
-#timeline_13.v-timeline--dense:not(.v-timeline--reverse):before, .v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before{
+
+#timeline_13.v-timeline--dense:not(.v-timeline--reverse):before,
+.v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before {
     background-color: #98D4E2;
 }
-#timeline_14.v-timeline--dense:not(.v-timeline--reverse):before, .v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before{
+
+#timeline_14.v-timeline--dense:not(.v-timeline--reverse):before,
+.v-application--is-rtl .v-timeline--reverse.v-timeline--dense:before {
     background-color: #662483;
 }
 
-.v-expansion-panel-content__wrap{
+.v-expansion-panel-content__wrap {
     padding-bottom: 0px;
 }

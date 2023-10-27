@@ -16,12 +16,24 @@
     <v-app>
       <v-app-bar app>
         <!-- -->
-        SNCHess - EFREI
+        <v-row>
+          <v-col sm="8">SNCHess - EFREI</v-col>
+          <v-col sm="4">
+            <v-autocomplete v-model="id_sommet_acpm" :items="sommets" item-text="nom" item-value="id" dense filled
+              label="Sommet ACPM" append-outer-icon="mdi-map" v-on:change="onSelectSommetAcpm(id_sommet_acpm)">
+              <template v-slot:item="{ item }">
+                <div>{{ item.nom }} - {{ item.num_ligne }}</div>
+              </template>
+            </v-autocomplete>
+
+          </v-col>
+        </v-row>
+
       </v-app-bar>
-      <v-navigation-drawer width="600" class="pa-10" app>
+      <v-navigation-drawer width="30%" class="pa-10" app>
         Itinéraire SNCHess
 
-        <v-container fluid class="mt-5 pa-5"  >
+        <v-container fluid class="mt-5 pa-5">
           <v-autocomplete v-model="id_depart" :items="sommets" item-text="nom" item-value="id" dense filled
             label="Départ" append-outer-icon="mdi-map" v-on:change="onClickStation(id_depart)">
             <template v-slot:item="{ item }">
@@ -34,7 +46,8 @@
               <div>{{ item.nom }} - {{ item.num_ligne }}</div>
             </template>
           </v-autocomplete>
-          <v-btn v-if="isDepArr" v-on:click="swapItineraire" color="primary" elevation="10" ><v-icon large> mdi-swap-vertical</v-icon></v-btn>
+          <v-btn v-if="isDepArr" v-on:click="swapItineraire" color="primary" elevation="10"><v-icon large>
+              mdi-swap-vertical</v-icon></v-btn>
         </v-container>
 
         <v-divider class="mx-4"></v-divider>
@@ -100,7 +113,7 @@
                     Arrivé
                   </div>
                   <template v-slot:icon>
-                    <v-icon x-large> mdi-source-commit-end-local</v-icon>
+                    <v-icon x-large color="red"> mdi-map-marker</v-icon>
                   </template>
                   <div class="font-weight-normal">16h06 <strong>- {{portion.arrive}}</strong></div>
                 </v-timeline-item>
@@ -123,7 +136,7 @@
                     Arrivé
                   </div>
                   <template v-slot:icon>
-                    <v-icon x-large> mdi-source-commit-end-local</v-icon>
+                    <v-icon x-large color="red"> mdi-map-marker</v-icon>
                   </template>
                   <div class="font-weight-normal">16h06 <strong>- {{portion.arrive}}</strong></div>
                 </v-timeline-item>
@@ -140,10 +153,20 @@
       <!-- Sizes your content based upon application components -->
       <v-main id="main_map">
         <!-- If using vue-router -->
-        <canvas id="myCanvas"></canvas>
+
+        <v-container fluid fill-height>
+          <v-layout align-center justify-center>
+            <v-flex>
+              <div class="canvas-container">
+                <canvas id="myCanvas"></canvas>
+              </div>
+            </v-flex>
+          </v-layout>
+        </v-container>
+
       </v-main>
 
-      <v-footer app>
+      <v-footer class="center" app>
 
         SNCHess @ 2023
 
@@ -156,7 +179,7 @@
   <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
   <script src="./utils/js/app.js"></script>
-  <script type="text/javascript" src="./utils/js/paper.js"></script>
+  <script type="text/javascript" > paper.setup('myCanvas');</script>
 </body>
 
 </html>

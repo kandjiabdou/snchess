@@ -1,4 +1,4 @@
-paper.setup('myCanvas');
+// paper.setup('myCanvas');
 
 // var points = [
 //     new paper.Point(100, 100),

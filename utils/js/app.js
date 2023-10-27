@@ -34,14 +34,20 @@ new Vue({
     },
     circles: [],
     paths: [],
+    id_sommet_acpm: null,
+    data_all_acpm: null,
+    listPathAcpm : [],
+    listCricleAcpm : [],
+
   }),
   created() {
     this.readDataGraphe();
-    console.log("created data")
+    console.log("created data");
     paper.setup('myCanvas');
   },
   mounted() {
     console.log("montéé");
+    this.drawCanvas();
   },
   methods: {
     async readDataGraphe() {
@@ -56,6 +62,15 @@ new Vue({
           this.dataPlusCourChemin = pcc_data["dict_pcc"];
           this.lignesMetros = pcc_data["lignes"];
           this.drawAllSommets();
+        }).catch(error => { console.error("Error :", error); });
+
+
+      await fetch('./model/acpm.json', { mode: 'no-cors' })
+        .then(response => response.json())
+        .then(data => {
+          this.data_all_acpm = data;
+          console.log(this.data_all_acpm);
+
         }).catch(error => { console.error("Error :", error); });
 
       return true;
@@ -228,7 +243,7 @@ new Vue({
       }
     },
     drawPortion(points, couleur) {
-
+      console.log(points);
       const path = new paper.Path();
       path.strokeColor = couleur;
       path.strokeWidth = 5;
@@ -244,6 +259,76 @@ new Vue({
       this.paths.push(path);
 
 
+    },
+    onSelectSommetAcpm(id_sommet_acpm) {
+      this.id_sommet_acpm = id_sommet_acpm;
+      if (!this.id_sommet_acpm) return false;
+      // Recuper les positions de chaque arrete de l'acpm
+
+      const acpm = this.data_all_acpm[this.id_sommet_acpm]['arbre'];
+      const listSegments = [];
+      const listCercles = [];
+      const randomColor = "#" + ((1 << 24) * Math.random() | 0).toString(16).padStart(6, "0");
+      acpm.forEach(arret => {
+        const pointA = this.sommets[arret[0]].position;
+        const pointB = this.sommets[arret[1]].position;
+        
+        const path = new paper.Path();
+        path.strokeColor = randomColor;
+        path.strokeWidth = 3;
+
+        const point_a = new paper.Point(pointA[0], pointA[1]);
+        path.add(point_a);
+        const circle_a = new paper.Path.Circle(point_a, 5);
+        circle_a.fillColor = randomColor;
+
+        const point_b = new paper.Point(pointB[0], pointB[1]);
+        path.add(point_b);
+        const circle_b = new paper.Path.Circle(point_b, 5);
+        circle_b.fillColor = randomColor;
+        this.listPathAcpm.push();
+        console.log();
+
+      });
+      // console.log(listSegments);
+
+    },
+    drawAcpm(segments) {
+      segments.forEach(arret => {
+        const path = new paper.Path();
+        path.strokeColor = "blue";
+        path.strokeWidth = 5;
+        for (let p in arret) {
+          console.log(arret);
+          // const point = new paper.Point(arret[0], points[p]['position'][1]);
+          // path.add(point);
+          // const circle = new paper.Path.Circle(point, 10);
+          // circle.fillColor = couleur;
+          // this.circles.push(circle);
+        }
+      });
+    },
+    drawCanvas() {
+      const canvas = document.getElementById('myCanvas');
+      const ctx = canvas.getContext('2d');
+
+      // Charger l'image de fond
+      const img = new Image();
+      img.src = 'url_de_votre_image_de_fond.jpg';
+      img.onload = () => {
+        // Dessiner l'image de fond avec une opacité de 50%
+        ctx.globalAlpha = 0.5;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Réinitialiser l'opacité
+        ctx.globalAlpha = 1.0;
+
+        // Vous pouvez ajouter d'autres éléments de dessin sur le canevas ici
+
+        // Par exemple, un rectangle centré
+        ctx.fillStyle = 'red';
+        ctx.fillRect(canvas.width / 4, canvas.height / 4, canvas.width / 2, canvas.height / 2);
+      };
     }
   },
   drawPathPointByPoint(path, points, currentIndex) {
