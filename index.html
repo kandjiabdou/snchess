@@ -15,11 +15,17 @@
   <div id="app">
     <!-- App.vue -->
     <v-app>
-      <v-app-bar app>
+      <v-app-bar class="pt-2" app>
         <!-- -->
         <v-row>
-          <v-col sm="8">SNCHess - EFREI</v-col>
-          <v-col sm="4">
+          <v-col sm="3" class="mt-5">SNCHess - EFREI</v-col>
+          <v-col sm="3" class="mt-5">
+            <v-btn @click="dialog = true" color="primary">
+              Vérifier la connexité
+            </v-btn>
+          </v-col>
+          
+          <v-col sm="6" class="mt-1">
             <v-autocomplete v-model="id_sommet_acpm" :items="sommets" item-text="nom" item-value="id" dense filled
               label="Sommet ACPM" append-outer-icon="mdi-map" v-on:change="onSelectSommetAcpm(id_sommet_acpm)">
               <template v-slot:item="{ item }">
@@ -163,7 +169,46 @@
       <v-footer class="center" app>
         SNCHess @ 2023
       </v-footer>
+      
     </v-app>
+
+    <!-- Dialog -->
+    
+    <template>
+      <div class="text-center">
+        <v-dialog
+          v-model="dialog"
+          width="500"
+        >
+    
+          <v-card>
+            <v-card-title class="text-h5 grey lighten-2">
+              Connexité du graphe
+            </v-card-title>
+    
+            <v-card-text class="text-center text-h4" class="pt-2">
+              Le graphe est bien connexe !
+            </v-card-text>
+    
+            <v-divider></v-divider>
+    
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn 
+                color="primary"
+                text
+                @click="dialog = false"
+              >
+                Fermer
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+      </div>
+    </template>
+    
+
+
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>

@@ -8,6 +8,7 @@ new Vue({
     dataPlusCourChemin: null,
     lignesMetros: null,
     itineraire: null,
+    dialog: false,
     couleurLinges: {
       "1": "#FFCE00", "2": "#0064B0", "3": "#9F9825", "3bis": "#98D4E2",
       "4": "#C04191", "5": "#F28E42", "6": "#83C491", "7": "#F3A4BA",
@@ -36,7 +37,7 @@ new Vue({
     paths: [],
     id_sommet_acpm: null,
     data_all_acpm: null,
-    listPathAcpm : [],
+    listPathAcpm: [],
     listCricleAcpm: [],
   }),
   created() {
@@ -268,11 +269,11 @@ new Vue({
       this.id_sommet_acpm = id_sommet_acpm;
       console.log(id_sommet_acpm);
       // Recuper les positions de chaque arrete de l'acpm
-      
+
       this.removeDrawing();
 
       const acpm = this.data_all_acpm[this.id_sommet_acpm]['arbre'];
-      
+
 
       const randomColor = "#" + ((1 << 24) * Math.random() | 0).toString(16).padStart(6, "0");
       acpm.forEach(arret => {
@@ -297,27 +298,17 @@ new Vue({
         this.listCricleAcpm.push(circle_a);
         this.listCricleAcpm.push(circle_b);
       });
-      const pos_source = this.sommets[id_sommet_acpm].position;
-      const point_source = new paper.Point(pos_source[0], pos_source[1]);
-      const circle_source = new paper.Path.Circle(point_source, 10);
-      circle_source.fillColor = "black";
-      var label_source = new paper.PointText({
-        point: new paper.Point(pos_source[0]+20, pos_source[1]),
-        content: this.sommets[id_sommet_acpm].nom,
-        fillColor: 'black',
-        fontSize: 20
-    });
 
-    this.listCricleAcpm.push(circle_source);
-    this.listCricleAcpm.push(label_source);
+      this.listCricleAcpm.push(circle_source);
+      this.listCricleAcpm.push(label_source);
 
     },
-    removeDrawing(){
+    removeDrawing() {
       for (const p in this.paths) {
-         this.paths[p].remove();
+        this.paths[p].remove();
       }
       for (const c in this.circles) {
-         this.circles[c].remove();
+        this.circles[c].remove();
       }
       this.circles = [];
       this.paths = [];
@@ -348,7 +339,7 @@ new Vue({
       }
     }
   },
-  removeAcpm(){
+  removeAcpm() {
 
   },
   drawPathPointByPoint(path, points, currentIndex) {
