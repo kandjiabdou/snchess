@@ -299,6 +299,17 @@ new Vue({
         this.listCricleAcpm.push(circle_b);
       });
 
+      const pos_source = this.sommets[id_sommet_acpm].position;
+      const point_source = new paper.Point(pos_source[0], pos_source[1]);
+      const circle_source = new paper.Path.Circle(point_source, 10);
+      circle_source.fillColor = "black";
+      var label_source = new paper.PointText({
+        point: new paper.Point(pos_source[0] + 20, pos_source[1]),
+        content: this.sommets[id_sommet_acpm].nom,
+        fillColor: 'black',
+        fontSize: 20
+      });
+
       this.listCricleAcpm.push(circle_source);
       this.listCricleAcpm.push(label_source);
 
