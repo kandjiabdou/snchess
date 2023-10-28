@@ -6,7 +6,6 @@ def prim(graph, sommetDepart):
     visited = set()
     visited.add(sommetDepart)
     poids_total = 0
-
     while len(visited) < len(graph):
         poids_minimum = float('inf')
         min_E = None
@@ -54,50 +53,136 @@ def get_sommet_position(file_name):
     return positions
 
 def get_graphe(file_name, pospoints):
-    file_sommets = "sommets.json"
-    if os.path.exists(file_sommets):
-        with open(file_sommets, 'r', encoding = "utf8") as data_sommet_file:
-            graphe = json.load(data_sommet_file)
-            return graphe
+    """
+    Cette fonction charge le données du graphe à partir d'un fichier de donné.
+    
+    Complexité O(|V|+|E|)
+
+    Args:
+        file_name (str): Le nom du fichier contenant les données du graphe (sommets et arretes).
+        pospoints (dict): Un dictionnaire contenant les positions des points.
+    
+    Returns:
+        list : Tableau représentant le graphe
+        Retrourne un tableau. Chaque element du tableau est un dictionnaire
+        et contient les informations sur un sommet et a ces ces propriétés suivants :
+        {
+            "id": numéro du sommet (int),
+            "nom": nom du sommet (str),
+            "num_ligne": numéro de la ligne (str),
+            "is_terminus": si le sommet est un terminus (boolean),
+            "branchement": branchement du sommet ou station sur sa ligne (str),
+                0 stations en commun, 1 pour la direction 1,  2 pour la direction 2
+            "voisins": liste les voisins du sommet (dict),
+                {num-voisin (str): poids-voisins (int), ...},
+            "position": coordonnées du sommet
+                [x (int), y (int)]
+        }
+    """
+    
+    file_data_graphe = "graphe.json"
+    # Si le fichier json graphe existe, on lit les données, pas besion de réexéuter l'algo
+    if os.path.exists(file_data_graphe):
+        # ouverture du json en utf8 pour bien conserer les caracteres spéciaux
+        with open(file_data_graphe, 'r', encoding="utf8") as data_sommet_file:
+            # on charge les données et les retourne
+            return json.load(data_sommet_file)
+
+    # Sinon, crée le graphe à partir des données fichier file_name
     graphe = []
-    with open(file_name, "r", encoding = "utf8") as file:
+    # ouverture du json en utf8 pour bien conserer les caracteres spéciaux
+    with open(file_name, "r", encoding="utf8") as file:
+        # on parcours chaque ligne du fichier
         for ligne in file:
+            # si la ligne contient des infos sur un sommet, elle commence par un 'V'
             if ligne.startswith("V"):
-                ligne = ligne[:2]+";"+ligne[2:6]+";"+ligne[6:len(ligne)-2]+";"+ligne[len(ligne)-2:]
+                # on sépare les données sur le sommet et les met à leur place
+                ligne = ligne[:2] + ";" + ligne[2:6] + ";" + ligne[6:len(ligne) - 2] + ";" + ligne[len(ligne) - 2:]
                 V = list(map(str.strip, ligne.split(";")))[1:]
-                data_sommet = {"id":int(V[0]),"nom":V[1], "num_ligne": V[2], "is_terminus": V[3],"branchement":V[4], "voisins":{}}
+                data_sommet = {
+                    "id": int(V[0]), "nom": V[1], "num_ligne": V[2], "is_terminus": V[3], "branchement": V[4],
+                    "voisins": {} # list vide pour l'instant, car les arretes sont en bas du fichier
+                }
+                # ajoute le sommetdans le graphe
                 graphe.append(data_sommet)
-                nom = unidecode(V[1]).lower()
-                coordonne_sommet = pospoints[nom].pop(0)
+
+                # Remarque : le nombre de sommet dans 'pospoints.txt' est supérieur
+                # au nombre de sommet dans 'metro.txt'
+
+                # pospoints est un dictionnaire contenante le nom des sommets
+                # pour chaque sommet la liste de ses coordonnées
+
+                # On mets en place une structre file d'attente circulaire,
+                # le nom du sommet déjà pris (devant teten de file) est mis deriere
+                # pop(0) puis append()
+                nom = unidecode(V[1]).lower() # nom du sommet
+                coordonne_sommet = pospoints[nom].pop(0) # 
                 data_sommet["position"] = coordonne_sommet
+                # ajoute la position du sommet
                 pospoints[nom].append(coordonne_sommet)
 
+            # si la ligne contient des infos sur une arrtet, elle commence par une 'E'
             elif ligne.startswith("E"):
+                # sommet1 sommet2 poids
                 s1, s2, p = ligne.split()[1:]
+                # le graphe est non orienté, alors on mets le lien dans les deux sens
                 graphe[int(s1)]["voisins"][int(s2)] = int(p)
                 graphe[int(s2)]["voisins"][int(s1)] = int(p)
-                
-    with open(file_sommets, 'w', encoding="utf8") as file_save_sommets:
+
+    # Sauvegarde le graphe dans un fichier de graphe.json
+    with open(file_data_graphe, 'w', encoding="utf8") as file_save_sommets:
         json.dump(graphe, file_save_sommets)
     return graphe
 
 def bellmanFord(graphe, s):
+    """
+    Implémente l'algorithme de Bellman-Ford pour trouver le plus court chemin  à partir d'un sommet source donné dans le graphe.
+    
+    Complexité O(|V|+|E|)
+
+    Args:
+        graphe (list): Le graphe sous forme de liste de sommets avec des voisins pondérés.
+        s (int): e sommet source à partir duquel le plus court chemin est recherché.
+
+    Returns: Un tuple contenant deux éléments :
+        dict : Un dictionnaire des distances minimales depuis le sommet source à chaque sommet (taille N sommet du graphe)
+        list : Une liste de chemins, chaque chemin étant une liste d'indices de sommets formant le plus court chemin (taille N sommet du graphe).
+
+    """
+    # Implementation du pseudo-code dans le cours
+    # Initialisation des distances minimales,
     d_ = {v: float('inf') for v in range(len(graphe))}
-    chemins = [[s] for v in graphe]
-    d_[s] = 0
-    L = [s]
-    while L:
-        t = L.pop()
-        voisin_t = graphe[t]["voisins"]
-        for k in voisin_t:
+    d_[s] = 0 # infi pour chaque sommet sauf s
+
+    chemins = [[s] for v in graphe] # list de chemin, début avec s pour chaque sommet
+    L = [s] # liste des sommets à traiter
+    while L: # tant que la liste n'est pas vide
+        t = L.pop() # on choisi un sommet et le supprime de la liste
+        voisin_t = graphe[t]["voisins"] # les voisins du sommets choisi
+        for k in voisin_t: # pour chaque sommet k voisin de t
             k_ = int(k)
+            # pour quitter s vers t,
+            # si la distance est plus petite passant par ce voisin k
             if d_[k_] > d_[t] + voisin_t[k]:
-                d_[k_] = d_[t] + voisin_t[k]
-                L.append(k_)
-                chemins[k_] = chemins[t]+[k_]
+                d_[k_] = d_[t] + voisin_t[k] # on met à jour la distance 
+                L.append(k_) # et ajoute le sommet k dabs la liste à traiter
+                chemins[k_] = chemins[t]+[k_] # on met à jour le le chemin aussi
     return d_, chemins
 
 def get_all_ppc(graphe):
+    """
+    Fait le bellemanFord de tous les sommets vers tous les sommets (many to many).
+    Initialise en même temps l'ensemble des lignes de métro.
+
+    Complexité O(|V|²)
+
+    Args:
+        graphe (list): données du graphe
+    Returns:
+        dict_pcc (dict) : bellmanford de tous les sommets
+        lignes (dict) : l'ensemble des lignes de métro dans le graphe
+    """
+    # fichier json de sauvegarde
     fichier_pcc = "ppc_graphe.json"
     if os.path.exists(fichier_pcc):
         with open(fichier_pcc, 'r') as data_json:
@@ -176,10 +261,10 @@ graphe = get_graphe(metro_file, positions)
 prim_all_sommet(graphe)
 
 
-# dict_ppc, lignes = get_all_ppc(graphe)
+dict_ppc, lignes = get_all_ppc(graphe)
 
-# depart = 0
-# arrive = 1
+# depart = 363
+# arrive = 364
 # print(plus_court_chemin(depart,arrive, dict_ppc, graphe))
 
 # print("Direction :",get_direction(depart,arrive, lignes, graphe))

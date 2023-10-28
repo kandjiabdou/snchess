@@ -37,21 +37,17 @@ new Vue({
     id_sommet_acpm: null,
     data_all_acpm: null,
     listPathAcpm : [],
-    listCricleAcpm : [],
-
+    listCricleAcpm: [],
   }),
   created() {
     this.readDataGraphe();
-    console.log("created data");
-    paper.setup('myCanvas');
   },
   mounted() {
-    console.log("montéé");
     this.drawCanvas();
   },
   methods: {
     async readDataGraphe() {
-      await fetch('./model/sommets.json', { mode: 'no-cors' })
+      await fetch('./model/graphe.json', { mode: 'no-cors' })
         .then(response => response.json())
         .then(data => { this.sommets = data; })
         .catch(error => { console.error("Error:", error); });
@@ -78,19 +74,7 @@ new Vue({
     onClickStation(id_sommet, depart = true) {
       if (depart) this.id_depart = id_sommet;
       else this.id_arrive = id_sommet;
-      if (this.isDepArr) {
-        console.log("________________________________________");
-        this.itineraire = this.getItineraireInfo(this.id_depart, this.id_arrive);
-        this.drawPath();
-      }
-    },
-    swapItineraire() {
-      console.log(this.id_depart, this.id_arrive);
-      let sommet = this.id_depart
-      this.id_depart = this.id_arrive;
-      this.id_arrive = sommet;
-      console.log(this.id_depart, this.id_arrive);
-      this.itineraire = [];
+
       if (this.isDepArr) {
         console.log("________________________________________");
         this.itineraire = this.getItineraireInfo(this.id_depart, this.id_arrive);
@@ -98,17 +82,27 @@ new Vue({
         this.drawPath();
       }
     },
+    swapItineraire() {
+      let sommet = this.id_arrive
+      this.id_arrive = this.id_depart;
+      this.onClickStation(sommet);
+    },
     getItineraireInfo(depart, arrive) {
-      const pcc = this.getPlusCourtChemin(depart, arrive);
-      const cheminSections = this.getCheminPortionDetails(pcc["chemin"]);
-      const itineraireInfo = {
+      var pcc = this.getPlusCourtChemin(depart, arrive);
+      const tempsTrajetSecondes = pcc["distance"];
+      var cheminSections = this.getCheminPortionDetails(pcc["chemin"]);
+
+      const heureDepart = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      const dateArrive = new Date(Date.now() + tempsTrajetSecondes * 1000);
+      const heureArrive = dateArrive.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      var itineraireInfo = {
         "portions": cheminSections['portions'],
-        "temps_trajet": this.getHeureMinutes(pcc["distance"]),
+        "temps_trajet": this.getHeureMinutes(tempsTrajetSecondes),
         "temps_marche": cheminSections['tempsMarcheTotal'],
         "depart": this.getNomSommet(depart),
         "arrive": this.getNomSommet(arrive),
-        "heure_depart": "15h54",
-        "heure_arrive": "16h35"
+        "heure_depart": heureDepart,
+        "heure_arrive": heureArrive
       }
       return itineraireInfo;
     },
@@ -127,12 +121,11 @@ new Vue({
         } else if (!this.estMemeLigne(portion["dep"], chemin[i])) {
           portion["arr"] = chemin[i - 1];
           if (portion["dep"] != portion["arr"]) result.push(portion);
-          const temps_marche = this.getHeureMinutes(this.getTemps(chemin[i - 1], chemin[i]));
+
           tempsMarcheTotal += this.getTemps(chemin[i - 1], chemin[i]);
           marche = {
             "marche": true, "dep": chemin[i - 1],
-            "arr": chemin[i], "temps": temps_marche,
-            "couleur": "black"
+            "arr": chemin[i], "couleur": "black"
           };
           result.push(marche);
           portion = { "ligne": this.getLigne(chemin[i]), "dep": chemin[i], "arr": null };
@@ -142,20 +135,28 @@ new Vue({
         portion["arr"] = chemin[chemin.length - 1];
         result.push(portion);
       }
+      let sommeTemps = 0;
+      let tempsPortion;
       result.forEach(portion_ => {
         pcc = this.getPlusCourtChemin(portion_["dep"], portion_["arr"]);
+        tempsPortion = pcc['distance'];
+        portion_['temps'] = this.getHeureMinutes(tempsPortion);
+        portion_['heureDepart'] = this.getHeureLocale(sommeTemps);
+        portion_['heureArrive'] = this.getHeureLocale(sommeTemps + tempsPortion);
         if (!portion_.marche) {
-          portion_['temps'] = this.getHeureMinutes(pcc['distance']);
           portion_['direction'] = this.getDirection(portion_["dep"], portion_["arr"]);
           portion_['couleur'] = this.couleurLinges[portion_["ligne"]];
           portion_['img_ligne'] = this.imageLignes[portion_["ligne"]];
           portion_['nb_arret'] = pcc['chemin'].length - 1;
           portion_['arrtets_intermediaires'] = [];
+
           for (let i = 1; i < pcc['chemin'].length - 1; i++) {
             portion_['arrtets_intermediaires'].push(this.getNomSommet(pcc['chemin'][i]));
           }
-
         }
+
+        sommeTemps += tempsPortion;
+
         portion_['points'] = [];
         var point;
         for (let i = 0; i < pcc['chemin'].length; i++) {
@@ -185,14 +186,24 @@ new Vue({
       if (h === 0 && m === 0) return '1';
       return h === 0 ? m : h + "h" + m;
     },
+    getHeureLocale(t) {
+      const heure = new Date(Date.now() + t * 1000);
+      // const heureArrive = dateArrive.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      return heure.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    },
     getPlusCourtChemin(depart, arrive) {
       if (this.sommets && this.dataPlusCourChemin && this.lignesMetros && depart != arrive) {
         var pcc;
-        if (depart > arrive) pcc = this.dataPlusCourChemin[depart][arrive];
+        if (depart > arrive) {
+          pcc = JSON.parse(JSON.stringify(this.dataPlusCourChemin[depart][arrive]));
+          // pcc = this.dataPlusCourChemin[depart][arrive];
+        }
         else {
-          pcc = this.dataPlusCourChemin[arrive][depart];
+          pcc = JSON.parse(JSON.stringify(this.dataPlusCourChemin[arrive][depart]));
+          // pcc = this.dataPlusCourChemin[arrive][depart];
           pcc['chemin'].reverse();
         }
+
         return pcc;
       }
       return false;
@@ -229,21 +240,14 @@ new Vue({
       }
     },
     async drawPath() {
-      for (const p in this.paths) {
-        await this.paths[p].remove();
-      }
-      for (const c in this.circles) {
-        await this.circles[c].remove();
-      }
-      this.circles = [];
-      this.paths = [];
+      this.removeDrawing();
+
       for (p in this.itineraire.portions) {
         const portion = this.itineraire.portions[p];
         this.drawPortion(portion.points, portion.couleur);
       }
     },
     drawPortion(points, couleur) {
-      console.log(points);
       const path = new paper.Path();
       path.strokeColor = couleur;
       path.strokeWidth = 5;
@@ -264,15 +268,16 @@ new Vue({
       this.id_sommet_acpm = id_sommet_acpm;
       if (!this.id_sommet_acpm) return false;
       // Recuper les positions de chaque arrete de l'acpm
+      
+      this.removeDrawing();
 
       const acpm = this.data_all_acpm[this.id_sommet_acpm]['arbre'];
-      const listSegments = [];
-      const listCercles = [];
+
       const randomColor = "#" + ((1 << 24) * Math.random() | 0).toString(16).padStart(6, "0");
       acpm.forEach(arret => {
         const pointA = this.sommets[arret[0]].position;
         const pointB = this.sommets[arret[1]].position;
-        
+
         const path = new paper.Path();
         path.strokeColor = randomColor;
         path.strokeWidth = 3;
@@ -286,50 +291,51 @@ new Vue({
         path.add(point_b);
         const circle_b = new paper.Path.Circle(point_b, 5);
         circle_b.fillColor = randomColor;
-        this.listPathAcpm.push();
-        console.log();
 
+        this.listPathAcpm.push(path);
+        this.listCricleAcpm.push(circle_a);
+        this.listCricleAcpm.push(circle_b);
       });
-      // console.log(listSegments);
 
     },
-    drawAcpm(segments) {
-      segments.forEach(arret => {
-        const path = new paper.Path();
-        path.strokeColor = "blue";
-        path.strokeWidth = 5;
-        for (let p in arret) {
-          console.log(arret);
-          // const point = new paper.Point(arret[0], points[p]['position'][1]);
-          // path.add(point);
-          // const circle = new paper.Path.Circle(point, 10);
-          // circle.fillColor = couleur;
-          // this.circles.push(circle);
-        }
+    removeDrawing(){
+      for (const p in this.paths) {
+         this.paths[p].remove();
+      }
+      for (const c in this.circles) {
+         this.circles[c].remove();
+      }
+      this.circles = [];
+      this.paths = [];
+      this.listPathAcpm.forEach(path => {
+        path.remove();
       });
+      this.listPathAcpm = [];
+
+      this.listCricleAcpm.forEach(circle => {
+        circle.remove();
+      });
+      this.listCricleAcpm = [];
     },
     drawCanvas() {
-      const canvas = document.getElementById('myCanvas');
-      const ctx = canvas.getContext('2d');
+      var canvas = document.getElementById("myCanvas"),
+        ctx = canvas.getContext("2d");
 
-      // Charger l'image de fond
-      const img = new Image();
-      img.src = 'url_de_votre_image_de_fond.jpg';
-      img.onload = () => {
-        // Dessiner l'image de fond avec une opacité de 50%
-        ctx.globalAlpha = 0.5;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.width = 903;
+      canvas.height = 657;
 
-        // Réinitialiser l'opacité
-        ctx.globalAlpha = 1.0;
 
-        // Vous pouvez ajouter d'autres éléments de dessin sur le canevas ici
+      var background = new Image();
+      background.src = "https://www.ratp.fr/plan-de-ligne/img/metro/Plan-Metro.1669996027.png";
 
-        // Par exemple, un rectangle centré
-        ctx.fillStyle = 'red';
-        ctx.fillRect(canvas.width / 4, canvas.height / 4, canvas.width / 2, canvas.height / 2);
-      };
+      // Make sure the image is loaded first otherwise nothing will draw.
+      background.onload = function () {
+        ctx.drawImage(background, 0, 0);
+      }
     }
+  },
+  removeAcpm(){
+
   },
   drawPathPointByPoint(path, points, currentIndex) {
     if (currentIndex < points.length) {
@@ -338,7 +344,6 @@ new Vue({
       const circle = new paper.Path.Circle(point, 10);
       circle.fillColor = couleur;
       this.circles.push(circle);
-
       setTimeout(() => {
         drawPathPointByPoint(points, currentIndex + 1);
       }, 100);

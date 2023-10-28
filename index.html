@@ -11,6 +11,7 @@
 </head>
 
 <body>
+
   <div id="app">
     <!-- App.vue -->
     <v-app>
@@ -78,7 +79,6 @@
             </v-timeline>
 
             <div v-for="portion in itineraire.portions" :key="portion.id">
-
               <v-timeline v-if="!portion.marche" :id="'timeline_' + portion.ligne" align-top dense
                 class="custom-timeline-bar pt-4">
 
@@ -89,7 +89,7 @@
                     </v-avatar>
                   </template>
                   <div>
-                    <div class="font-weight-normal mb-3">15h43 - <strong> {{portion.depart}}</strong></div>
+                    <div class="font-weight-normal mb-3"> {{portion.heureDepart}} - <strong> {{portion.depart}}</strong></div>
                     <v-card class="pa-2">
                       <div><strong>Metro {{portion.ligne}}</strong></div>
                       <div class="font-weight-normal mb-4">Direction : <strong>{{portion.direction}}</strong></div>
@@ -112,14 +112,11 @@
                   <div>
                     Arrivé
                   </div>
-                  <template v-slot:icon>
-                    <v-icon x-large color="red"> mdi-map-marker</v-icon>
-                  </template>
-                  <div class="font-weight-normal">16h06 <strong>- {{portion.arrive}}</strong></div>
+                  <div class="font-weight-normal">{{itineraire.heure_arrive}} <strong>- {{portion.arrive}}</strong></div>
                 </v-timeline-item>
 
                 <v-timeline-item v-else class="pb-2" :color="portion.couleur" align-end small>
-                  <div class="font-weight-normal">16h06 <strong>- {{portion.arrive}}</strong></div>
+                  <div class="font-weight-normal">{{portion.heureArrive}} <strong>- {{portion.arrive}}</strong></div>
                 </v-timeline-item>
 
               </v-timeline>
@@ -135,10 +132,7 @@
                   <div>
                     Arrivé
                   </div>
-                  <template v-slot:icon>
-                    <v-icon x-large color="red"> mdi-map-marker</v-icon>
-                  </template>
-                  <div class="font-weight-normal">16h06 <strong>- {{portion.arrive}}</strong></div>
+                  <div class="font-weight-normal">{{itineraire.heure_arrive}} <strong>- {{portion.arrive}}</strong></div>
                 </v-timeline-item>
 
               </v-timeline>
@@ -167,19 +161,14 @@
       </v-main>
 
       <v-footer class="center" app>
-
         SNCHess @ 2023
-
       </v-footer>
     </v-app>
-
   </div>
-
 
   <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
   <script src="./utils/js/app.js"></script>
-  <script type="text/javascript" > paper.setup('myCanvas');</script>
+  <script type="text/javascript"> paper.setup('myCanvas');</script>
 </body>
-
 </html>
