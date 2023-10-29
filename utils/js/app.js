@@ -3,7 +3,7 @@ new Vue({
   data: () => ({
     id_depart: null,
     id_arrive: null,
-    graphe: null,
+    arretes: null,
     sommets: null,
     dataPlusCourChemin: null,
     lignesMetros: null,
@@ -37,6 +37,10 @@ new Vue({
     paths: [],
     id_sommet_acpm: null,
     data_all_acpm: null,
+    currentAcpm: null,
+    poidsTotalAcpm: null,
+    speedDrawingAcpm: 100,
+    idTimeout: null,
     listPathAcpm: [],
     listCricleAcpm: [],
   }),
@@ -50,15 +54,21 @@ new Vue({
     async readDataGraphe() {
       await fetch('./model/graphe.json', { mode: 'no-cors' })
         .then(response => response.json())
-        .then(data => { this.sommets = data; })
-        .catch(error => { console.error("Error:", error); });
+        .then(data => {
+          this.sommets = data;
+        }).catch(error => { console.error("Error:", error); });
+
+      await fetch('./model/arretes.json', { mode: 'no-cors' })
+        .then(response => response.json())
+        .then(data => {
+          this.arretes = data;
+        }).catch(error => { console.error("Error:", error); });
 
       await fetch('./model/ppc_graphe.json', { mode: 'no-cors' })
         .then(response => response.json())
         .then(pcc_data => {
           this.dataPlusCourChemin = pcc_data["dict_pcc"];
           this.lignesMetros = pcc_data["lignes"];
-          this.drawAllSommets();
         }).catch(error => { console.error("Error :", error); });
 
 
@@ -66,9 +76,10 @@ new Vue({
         .then(response => response.json())
         .then(data => {
           this.data_all_acpm = data;
-          console.log(this.data_all_acpm);
-
         }).catch(error => { console.error("Error :", error); });
+
+      this.drawAllArretes();
+      this.drawAllSommets();
 
       return true;
     },
@@ -77,9 +88,7 @@ new Vue({
       else this.id_arrive = id_sommet;
 
       if (this.isDepArr) {
-        console.log("________________________________________");
         this.itineraire = this.getItineraireInfo(this.id_depart, this.id_arrive);
-        console.log(this.itineraire);
         this.drawPath();
       }
     },
@@ -184,7 +193,7 @@ new Vue({
     getHeureMinutes(t) {
       const h = Math.floor(t / 3600);
       const m = Math.floor((t % 3600) / 60);
-      if (h === 0 && m === 0) return '1';
+      // if (h === 0 && m === 0) return '1';
       return h === 0 ? m : h + "h" + m;
     },
     getHeureLocale(t) {
@@ -235,83 +244,120 @@ new Vue({
         var point = new paper.Point(pt[0], pt[1]);
         var circle = new paper.Path.Circle({
           center: point,
-          radius: 5,
-          fillColor: 'black'
+          radius: 3,
+          fillColor: 'grey'
         });
       }
     },
+    drawAllArretes() {
+      this.arretes.forEach(arret => {
+        const pointA = this.sommets[arret[0]].position;
+        const pointB = this.sommets[arret[1]].position;
+        const path = new paper.Path();
+        path.strokeColor = "grey";
+        path.strokeWidth = 2;
+
+        const point_a = new paper.Point(pointA[0], pointA[1]);
+        path.add(point_a);
+        const point_b = new paper.Point(pointB[0], pointB[1]);
+        path.add(point_b);
+      });
+    },
     async drawPath() {
       this.removeDrawing();
+      clearTimeout(this.idTimeout);
+      this.drawPointName(this.id_depart);
+      this.drawPointName(this.id_arrive);
 
       for (p in this.itineraire.portions) {
         const portion = this.itineraire.portions[p];
         this.drawPortion(portion.points, portion.couleur);
       }
+      
     },
     drawPortion(points, couleur) {
       const path = new paper.Path();
       path.strokeColor = couleur;
-      path.strokeWidth = 5;
-
-      for (let p in points) {
-        const point = new paper.Point(points[p]['position'][0], points[p]['position'][1]);
+      path.strokeWidth = 4;
+      this.drawPointSegment(this, 0, points, path, couleur);
+      this.paths.push(path);
+    },
+    drawPointSegment(this_, index, points, path, couleur) {
+      if (index < points.length) {
+        const point = new paper.Point(points[index]['position'][0], points[index]['position'][1]);
         path.add(point);
-        const circle = new paper.Path.Circle(point, 10);
+        const circle = new paper.Path.Circle(point, 5);
         circle.fillColor = couleur;
         this.circles.push(circle);
+        this_.idTimeout = setTimeout(function () {
+          this_.drawPointSegment(this_, index + 1, points, path);
+        }, this_.speedDrawingAcpm);
       }
-
-      this.paths.push(path);
-
-
     },
-    onSelectSommetAcpm(id_sommet_acpm) {
-      this.id_sommet_acpm = id_sommet_acpm;
-      console.log(id_sommet_acpm);
-      // Recuper les positions de chaque arrete de l'acpm
-
-      this.removeDrawing();
-
-      const acpm = this.data_all_acpm[this.id_sommet_acpm]['arbre'];
-
-
-      const randomColor = "#" + ((1 << 24) * Math.random() | 0).toString(16).padStart(6, "0");
-      acpm.forEach(arret => {
+    drawSegment(object, index, randomColor) {
+      if (index < this.currentAcpm.length) {
+        const arret = this.currentAcpm[index];
         const pointA = this.sommets[arret[0]].position;
         const pointB = this.sommets[arret[1]].position;
-
         const path = new paper.Path();
         path.strokeColor = randomColor;
         path.strokeWidth = 3;
-
         const point_a = new paper.Point(pointA[0], pointA[1]);
         path.add(point_a);
         const circle_a = new paper.Path.Circle(point_a, 5);
         circle_a.fillColor = randomColor;
-
         const point_b = new paper.Point(pointB[0], pointB[1]);
         path.add(point_b);
         const circle_b = new paper.Path.Circle(point_b, 5);
         circle_b.fillColor = randomColor;
-
         this.listPathAcpm.push(path);
         this.listCricleAcpm.push(circle_a);
         this.listCricleAcpm.push(circle_b);
-      });
 
-      const pos_source = this.sommets[id_sommet_acpm].position;
-      const point_source = new paper.Point(pos_source[0], pos_source[1]);
-      const circle_source = new paper.Path.Circle(point_source, 10);
-      circle_source.fillColor = "black";
-      var label_source = new paper.PointText({
-        point: new paper.Point(pos_source[0] + 20, pos_source[1]),
-        content: this.sommets[id_sommet_acpm].nom,
-        fillColor: 'black',
-        fontSize: 20
-      });
+        object.idTimeout = setTimeout(function () {
+          object.drawSegment(object, index + 1, randomColor);
+        }, object.speedDrawingAcpm);
+      }
 
-      this.listCricleAcpm.push(circle_source);
-      this.listCricleAcpm.push(label_source);
+    },
+    onSelectSommetAcpm(id_sommet_acpm) {
+      this.id_sommet_acpm = id_sommet_acpm;
+
+      // Recuper les positions de chaque arrete de l'acpm
+
+      this.removeDrawing();
+      this.currentAcpm = this.data_all_acpm[this.id_sommet_acpm]['arbre'];
+      this.poidsTotalAcpm = this.data_all_acpm[this.id_sommet_acpm]['poids_total'];
+
+      const randomColor = "#" + ((1 << 24) * Math.random() | 0).toString(16).padStart(6, "0");
+      this.drawPointName(id_sommet_acpm);
+      clearTimeout(this.idTimeout);
+      this.drawSegment(this, 0, randomColor);
+      // acpm.forEach( (arret, index) => {
+      //   // const pointA = this.sommets[arret[0]].position;
+      //   // const pointB = this.sommets[arret[1]].position;
+      //   // const path = new paper.Path();
+      //   // path.strokeColor = randomColor;
+      //   // path.strokeWidth = 3;
+      //   // const point_a = new paper.Point(pointA[0], pointA[1]);
+      //   // path.add(point_a);
+      //   // const circle_a = new paper.Path.Circle(point_a, 5);
+      //   // circle_a.fillColor = randomColor;
+      //   // const point_b = new paper.Point(pointB[0], pointB[1]);
+      //   // path.add(point_b);
+      //   // const circle_b = new paper.Path.Circle(point_b, 5);
+      //   // circle_b.fillColor = randomColor;
+      //   // this.listPathAcpm.push(path);
+      //   // this.listCricleAcpm.push(circle_a);
+      //   // this.listCricleAcpm.push(circle_b);
+      // setTimeout(function () {
+      //   this.drawSegment(index, randomColor);
+      // }, 1000);
+
+      // });
+
+
+
 
     },
     removeDrawing() {
@@ -348,25 +394,22 @@ new Vue({
       background.onload = function () {
         ctx.drawImage(background, 0, 0);
       }
-    }
-  },
-  removeAcpm() {
-
-  },
-  drawPathPointByPoint(path, points, currentIndex) {
-    if (currentIndex < points.length) {
-      const point = new paper.Point(points[currentIndex]['position'][0], points[currentIndex]['position'][1]);
-      path.add(point);
+    },
+    drawPointName(sommet) {
+      const pos_point = this.sommets[sommet].position;
+      const point = new paper.Point(pos_point[0], pos_point[1]);
       const circle = new paper.Path.Circle(point, 10);
-      circle.fillColor = couleur;
-      this.circles.push(circle);
-      setTimeout(() => {
-        drawPathPointByPoint(points, currentIndex + 1);
-      }, 100);
+      circle.fillColor = "black";
+      var label = new paper.PointText({
+        point: new paper.Point(pos_point[0] + 20, pos_point[1]),
+        content: this.sommets[sommet].nom,
+        fillColor: 'black',
+        fontSize: 20
+      });
 
-    } else {
-      // Animation terminée, vous pouvez ajouter du code ici pour gérer la fin de l'animation
-    }
+      this.listCricleAcpm.push(circle);
+      this.listCricleAcpm.push(label);
+    },
   },
   computed: {
     isDepArr() {

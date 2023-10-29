@@ -65,18 +65,17 @@ def dfs(s, liste, visited = 0):
     if visited == 0:
         visited = 1
         for i in range(len(liste)):
-            liste[i].append("visited=0")    
-       
+            liste[i].append("visited=0")
+    
     liste_arete = trouve_arete(s)
     liste[int(s)][3] = "visited=1"
     for sous_liste in liste_arete:
-    # Pour chaque sommet voisin de s faire
+        # Pour chaque sommet voisin de s faire
         if sous_liste[0] != str(s) and liste[int(sous_liste[0])][3] == "visited=0":
             dfs(int(sous_liste[0]), liste, 1)  # recursivité
         elif sous_liste[1] != str(s) and liste[int(sous_liste[1])][3] == "visited=0":
             dfs(int(sous_liste[1]), liste, 1)  # récursivité
-
-
+    
     
     return liste
 

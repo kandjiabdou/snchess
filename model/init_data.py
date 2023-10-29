@@ -81,6 +81,7 @@ def get_graphe(file_name, pospoints):
     """
     
     file_data_graphe = "graphe.json"
+    file_data_arretes = "arretes.json"
     # Si le fichier json graphe existe, on lit les données, pas besion de réexéuter l'algo
     if os.path.exists(file_data_graphe):
         # ouverture du json en utf8 pour bien conserer les caracteres spéciaux
@@ -90,6 +91,7 @@ def get_graphe(file_name, pospoints):
 
     # Sinon, crée le graphe à partir des données fichier file_name
     graphe = []
+    arretes = []
     # ouverture du json en utf8 pour bien conserer les caracteres spéciaux
     with open(file_name, "r", encoding="utf8") as file:
         # on parcours chaque ligne du fichier
@@ -125,13 +127,17 @@ def get_graphe(file_name, pospoints):
             elif ligne.startswith("E"):
                 # sommet1 sommet2 poids
                 s1, s2, p = ligne.split()[1:]
+                arretes.append([int(s1), int(s2), int(p)])
                 # le graphe est non orienté, alors on mets le lien dans les deux sens
                 graphe[int(s1)]["voisins"][int(s2)] = int(p)
                 graphe[int(s2)]["voisins"][int(s1)] = int(p)
 
     # Sauvegarde le graphe dans un fichier de graphe.json
-    with open(file_data_graphe, 'w', encoding="utf8") as file_save_sommets:
-        json.dump(graphe, file_save_sommets)
+    with open(file_data_graphe, 'w', encoding="utf8") as file_save_graphe:
+        json.dump(graphe, file_save_graphe)
+    # Sauvegarde la liste des arretes dans un fichier de arretes.json
+    with open(file_data_arretes, 'w', encoding="utf8") as file_save_arretes:
+        json.dump(arretes, file_save_arretes)
     return graphe
 
 def bellmanFord(graphe, s):
