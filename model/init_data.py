@@ -195,6 +195,8 @@ def get_all_ppc(graphe):
             data = json.load(data_json)
             return data["dict_pcc"], data["lignes"]
     liste_lignes_metros = {}
+
+    
     dict_ppc = {str(i): {} for i in range(len(graphe))}
     for i in range(len(graphe)):
         distances, chemins = bellmanFord(graphe, i)

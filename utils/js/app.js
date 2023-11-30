@@ -43,6 +43,9 @@ new Vue({
     idTimeout: null,
     listPathAcpm: [],
     listCricleAcpm: [],
+    canvasSize:null,
+    realSize : 987,
+    echelle:null
   }),
   created() {
     this.readDataGraphe();
@@ -77,6 +80,11 @@ new Vue({
         .then(data => {
           this.data_all_acpm = data;
         }).catch(error => { console.error("Error :", error); });
+
+      var canvas = document.getElementById("myCanvas");
+      this.canvasSize = canvas.width;
+      console.log(canvas.width)
+      console.log(canvas.height)
 
       this.drawAllArretes();
       this.drawAllSommets();
@@ -221,8 +229,10 @@ new Vue({
     getDirection(depart, arrive) {
       const brchmtD = parseInt(this.sommets[depart].branchement);
       const brchmtA = parseInt(this.sommets[arrive].branchement);
+
       if (this.sommets[depart].numLigne !== this.sommets[arrive].numLigne || brchmtD + brchmtA === 3)
         return false;
+      
       const numLigne = this.sommets[depart].num_ligne;
       let chemin;
       if (brchmtD === 1 || brchmtA === 1) {
@@ -333,32 +343,6 @@ new Vue({
       this.drawPointName(id_sommet_acpm);
       clearTimeout(this.idTimeout);
       this.drawSegment(this, 0, randomColor);
-      // acpm.forEach( (arret, index) => {
-      //   // const pointA = this.sommets[arret[0]].position;
-      //   // const pointB = this.sommets[arret[1]].position;
-      //   // const path = new paper.Path();
-      //   // path.strokeColor = randomColor;
-      //   // path.strokeWidth = 3;
-      //   // const point_a = new paper.Point(pointA[0], pointA[1]);
-      //   // path.add(point_a);
-      //   // const circle_a = new paper.Path.Circle(point_a, 5);
-      //   // circle_a.fillColor = randomColor;
-      //   // const point_b = new paper.Point(pointB[0], pointB[1]);
-      //   // path.add(point_b);
-      //   // const circle_b = new paper.Path.Circle(point_b, 5);
-      //   // circle_b.fillColor = randomColor;
-      //   // this.listPathAcpm.push(path);
-      //   // this.listCricleAcpm.push(circle_a);
-      //   // this.listCricleAcpm.push(circle_b);
-      // setTimeout(function () {
-      //   this.drawSegment(index, randomColor);
-      // }, 1000);
-
-      // });
-
-
-
-
     },
     removeDrawing() {
       for (const p in this.paths) {
@@ -380,20 +364,20 @@ new Vue({
       this.listCricleAcpm = [];
     },
     drawCanvas() {
-      var canvas = document.getElementById("myCanvas"),
-        ctx = canvas.getContext("2d");
+      // var canvas = document.getElementById("myCanvas"),
+      //   ctx = canvas.getContext("2d");
 
-      canvas.width = 903;
-      canvas.height = 657;
+      // canvas.width = 903;
+      // canvas.height = 657;
 
 
-      var background = new Image();
-      background.src = "https://www.ratp.fr/plan-de-ligne/img/metro/Plan-Metro.1669996027.png";
+      // var background = new Image();
+      // background.src = "https://www.ratp.fr/plan-de-ligne/img/metro/Plan-Metro.1669996027.png";
 
-      // Make sure the image is loaded first otherwise nothing will draw.
-      background.onload = function () {
-        ctx.drawImage(background, 0, 0);
-      }
+      // // Make sure the image is loaded first otherwise nothing will draw.
+      // background.onload = function () {
+      //   ctx.drawImage(background, 0, 0);
+      // }
     },
     drawPointName(sommet) {
       const pos_point = this.sommets[sommet].position;
